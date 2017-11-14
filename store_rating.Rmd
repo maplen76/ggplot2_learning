@@ -6,6 +6,7 @@ output:
   pdf_document: default
   html_document:
     df_print: paged
+    theme: united
 ---
 
 ```{r setup, include=FALSE}
@@ -79,7 +80,7 @@ for (i in 1:5) {
 ```
 
 
-```{r rating distribution, echo=FALSE}
+```{r rating distribution,fig.height=4, echo=FALSE}
 rating_df_plot <- ggplot(data = rating_df, aes(x = star, y = percentage, fill = 'red')) + theme_minimal() +
     geom_bar(stat = 'identity') + 
     geom_text(aes(label = paste0(percentage, "%"))) + 
@@ -95,4 +96,3 @@ rating_df_plot <- ggplot(data = rating_df, aes(x = star, y = percentage, fill = 
 
 rating_df_plot
 ```
-
