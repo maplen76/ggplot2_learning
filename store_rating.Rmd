@@ -1,0 +1,98 @@
+---
+title: "WOF Xbox Store Rating"
+author: "Jing.wang@ubisoft.com"
+date: "November 14, 2017"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load library, include=FALSE}
+library(rvest)
+library(stringr)
+library(ggplot2)
+library(scales)
+setwd('F:\\Console_WOF\\RApps')
+
+```
+
+```{r grab ratings, include=FALSE}
+# reset the proxy setting
+Sys.setenv(https_proxy="http://ctu-net-bcproxy:3128")
+url <- "https://www.microsoft.com/en-us/store/p/wheel-of-fortune/br76vbtv0nk0"
+url_xbox_store <- read_html(x = url, verbose = T)
+
+# extract xbox store rating
+Rating_xbox_store <- url_xbox_store %>% 
+    html_nodes(xpath = '//*[@id="ratings-reviews"]/div[1]/div[1]/div/span') %>%
+    html_text() %>%
+    as.numeric()
+
+nb_ratings_players <- url_xbox_store %>%
+    html_nodes(xpath = '//*[@id="ratings-reviews"]/div[1]/div[1]/div/div/div/span') %>%
+    html_text() %>%
+    as.numeric()
+```
+
+## The rating is `r Rating_xbox_store` which was rated by `r nb_ratings_players` players 
+
+Check out store page [Wheel of Fortune](https://www.microsoft.com/en-us/store/p/wheel-of-fortune/br76vbtv0nk0)
+
+-*the data is grabbed by `r Sys.time()`*
+
+```{r extract rating distribution, include=FALSE}
+star_a <-'//*[@id="ratings-reviews"]/div[1]/div[1]/ul/li['
+star_b <- ']/a/span[1]'
+
+per_a <- '//*[@id="ratings-reviews"]/div[1]/div[1]/ul/li['
+per_b <- ']/a/div/div/span'
+
+rating_df <- data.frame()
+
+for (i in 1:5) {
+    star_xpath <-  paste0(star_a,i,star_b)
+    percentage_xpath <- paste0(per_a,i,per_b)
+    
+    star <- url_xbox_store %>%
+        html_nodes(xpath = star_xpath) %>%
+        html_text() %>%
+        str_sub(1,1) %>%
+        as.numeric()
+    
+    percentage <- url_xbox_store %>%
+        html_nodes(xpath = percentage_xpath) %>%
+        html_text() %>%
+        str_replace('%', '') %>%
+        as.numeric()
+    
+    df <- data.frame(star = star, percentage = percentage)
+    rating_df <- rbind.data.frame(rating_df, df)
+    print(rating_df)
+}
+
+```
+
+
+```{r rating distribution, echo=FALSE}
+rating_df_plot <- ggplot(data = rating_df, aes(x = star, y = percentage, fill = 'red')) + theme_minimal() +
+    geom_bar(stat = 'identity') + 
+    geom_text(aes(label = paste0(percentage, "%"))) + 
+    scale_x_continuous(labels = dollar_format(suffix = " star", prefix = "")) +
+    theme(legend.position="none", 
+          axis.text.x = element_blank(),
+          axis.title=element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+          ) +
+    coord_flip()
+
+rating_df_plot
+```
+
