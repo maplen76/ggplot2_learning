@@ -96,3 +96,126 @@ rating_df_plot <- ggplot(data = rating_df, aes(x = star, y = percentage, fill = 
 
 rating_df_plot
 ```
+
+```{r reviewDetail, include=FALSE}
+# find html nodes to grab data
+path_review_user <- '//*[@class="srv_reviews"]/div[1]/div[1]/p[2]'
+path_review_date <- '//*[@class="srv_reviews"]/div[1]/div[1]/p[1]'
+path_review_star <- '//*[@class="srv_reviews"]/div[1]/div[1]/div/p/span[1]'
+path_review_title <- '//*[@class="srv_reviews"]/div[1]/div[2]/div[1]/h5/text()'
+path_review_detail <- '//*[@class="srv_reviews"]/div[1]/div[2]/div[1]/div[1]/p[1]'
+path_review_helpful <- '//*[@class="srv_reviews"]/div[1]/div[2]/div[2]/p'
+
+review_table <- data.frame()
+i <- 1
+repeat {
+    a <- as.character(i)
+    path_review_user <- str_replace(path_review_user, '[:digit:]', a)
+    path_review_date <- str_replace(path_review_date, '[:digit:]', a)
+    path_review_star <- str_replace(path_review_star, '[:digit:]', a)
+    path_review_title <- str_replace(path_review_title, '[:digit:]', a)
+    path_review_detail <- str_replace(path_review_detail, '[:digit:]', a)
+    path_review_helpful <- str_replace(path_review_helpful, '[:digit:]', a)
+    
+    review_user <- url_xbox_store %>%
+        html_nodes(xpath = path_review_user) %>%
+        html_text()
+    
+    review_date <- url_xbox_store %>%
+        html_nodes(xpath = path_review_date) %>%
+        html_text()
+    
+    review_star <- url_xbox_store %>%
+        html_nodes(xpath = path_review_star) %>%
+        html_text() %>%
+        as.numeric()
+   
+    review_title <- url_xbox_store %>%
+        html_nodes(xpath = path_review_title) %>%
+        html_text()
+    
+    review_detail <- url_xbox_store %>%
+        html_nodes(xpath = path_review_detail) %>%
+        html_text() %>%
+        str_replace_all("[\r\n]" , "")
+    
+    review_helpful <- url_xbox_store %>%
+        html_nodes(xpath = path_review_helpful) %>%
+        html_text() 
+    
+    comments <- data.frame(user = review_user, 
+                           date = review_date, 
+                           star = review_star,
+                           title = review_title,
+                           detail = review_detail,
+                           helpful = review_helpful, stringsAsFactors = F
+                           )
+    
+    review_table <- rbind.data.frame(review_table, comments)
+    
+    i <- i + 1
+    
+    if (length(review_user) == 0) {
+        break
+    }
+}
+
+```
+
+
+```{r getReviews, include=FALSE}
+reviews <- c(review_table$detail, review_table$title)
+
+```
+
+```{r wordCloud, include=FALSE}
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+
+
+text <- reviews
+docs <- Corpus(VectorSource(text))
+inspect(docs)
+
+#Text transformation
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+docs <- tm_map(docs, toSpace, "/")
+docs <- tm_map(docs, toSpace, "@")
+docs <- tm_map(docs, toSpace, "\\|")
+
+
+#cliean the text
+# Convert the text to lower case
+docs <- tm_map(docs, content_transformer(tolower))
+# Remove numbers
+docs <- tm_map(docs, removeNumbers)
+# Remove english common stopwords
+docs <- tm_map(docs, removeWords, stopwords("english"))
+# Remove your own stop word
+# specify your stopwords as a character vector
+docs <- tm_map(docs, removeWords, c("blabla1", "blabla2"))
+# Remove punctuations
+docs <- tm_map(docs, removePunctuation)
+# Eliminate extra white spaces
+docs <- tm_map(docs, stripWhitespace)
+# Text stemming
+# docs <- tm_map(docs, stemDocument)
+
+
+# Build a term-document matrix
+dtm <- TermDocumentMatrix(docs)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 10)
+```
+### Most Helpful Reviews Word Cloud
+```{r graphic, echo=FALSE}
+#Generate the Word cloud
+set.seed(1234)
+wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```
