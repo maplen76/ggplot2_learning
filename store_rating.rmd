@@ -175,7 +175,9 @@ library("wordcloud")
 library("RColorBrewer")
 
 
-text <- reviews
+reviews %>% 
+    # remove emojis
+    str_replace_all(pattern = '\\p{So}|\\p{Cn}', replacement = '')
 docs <- Corpus(VectorSource(text))
 inspect(docs)
 
