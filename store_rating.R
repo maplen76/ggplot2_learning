@@ -8,6 +8,7 @@ setwd('F:\\Console_WOF\\RApps')
 
 # xbox store page of WOF: https://www.microsoft.com/en-us/store/p/wheel-of-fortune/br76vbtv0nk0
 
+Sys.setenv(https_proxy="http://ctu-net-bcproxy:3128")
 url <- "https://www.microsoft.com/en-us/store/p/wheel-of-fortune/br76vbtv0nk0"
 # download.file(url = url, destfile = "wof_xboxstore_rating.html", quiet = T)
 
@@ -71,40 +72,72 @@ rating_df_plot <- ggplot(data = rating_df_pos, aes(x = star, y = percentage)) +
           panel.grid.minor = element_blank()
     ) +
     coord_flip()
-  
+
+# find html nodes to grab data
+path_review_user <- '//*[@class="srv_reviews"]/div[1]/div[1]/p[2]'
+path_review_date <- '//*[@class="srv_reviews"]/div[1]/div[1]/p[1]'
+path_review_star <- '//*[@class="srv_reviews"]/div[1]/div[1]/div/p/span[1]'
+path_review_title <- '//*[@class="srv_reviews"]/div[1]/div[2]/div[1]/h5/text()'
+path_review_detail <- '//*[@class="srv_reviews"]/div[1]/div[2]/div[1]/div[1]/p[1]'
+path_review_helpful <- '//*[@class="srv_reviews"]/div[1]/div[2]/div[2]/p'
+
+review_table <- data.frame()
+i <- 1
+repeat {
+    a <- as.character(i)
+    path_review_user <- str_replace(path_review_user, '[:digit:]', a)
+    path_review_date <- str_replace(path_review_date, '[:digit:]', a)
+    path_review_star <- str_replace(path_review_star, '[:digit:]', a)
+    path_review_title <- str_replace(path_review_title, '[:digit:]', a)
+    path_review_detail <- str_replace(path_review_detail, '[:digit:]', a)
+    path_review_helpful <- str_replace(path_review_helpful, '[:digit:]', a)
+    
+    review_user <- url_xbox_store %>%
+        html_nodes(xpath = path_review_user) %>%
+        html_text()
+    
+    review_date <- url_xbox_store %>%
+        html_nodes(xpath = path_review_date) %>%
+        html_text()
+    
+    review_star <- url_xbox_store %>%
+        html_nodes(xpath = path_review_star) %>%
+        html_text() %>%
+        as.numeric()
+   
+    review_title <- url_xbox_store %>%
+        html_nodes(xpath = path_review_title) %>%
+        html_text()
+    
+    review_detail <- url_xbox_store %>%
+        html_nodes(xpath = path_review_detail) %>%
+        html_text() %>%
+        str_replace_all("[\r\n]" , "")
+    
+    review_helpful <- url_xbox_store %>%
+        html_nodes(xpath = path_review_helpful) %>%
+        html_text() 
+    
+    comments <- data.frame(user = review_user, 
+                           date = review_date, 
+                           star = review_star,
+                           title = review_title,
+                           detail = review_detail,
+                           helpful = review_helpful, stringsAsFactors = F
+                           )
+    
+    review_table <- rbind.data.frame(review_table, comments)
+    
+    i <- i + 1
+    
+    if (length(review_user) == 0) {
+        break
+    }
+}
+
+review_table
 
 
-review_user <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/div[2]/div[1]/p[2]') %>%
-    html_text()
-
-review_date <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/div[2]/div[1]/p[1]') %>%
-    html_text()
-
-review_star <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/div[2]/div[1]/div/p/span[1]') %>%
-    html_text() %>%
-    as.numeric()
-
-review_title <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/div[2]/div[2]/div[1]/h5/text()') %>%
-    html_text()
-
-review_detail <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/div[2]/div[2]/div[1]/div[1]/p[1]') %>%
-    html_text() %>%
-    str_replace_all("[\r\n]" , "")
-
-review_helpful <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/div[2]/div[2]/div[2]/p') %>%
-    html_text() 
-
-
-
-
-x <- url_xbox_store %>%
-    html_nodes(xpath = '//*[@class="srv_reviews"]/')
 
 
 
@@ -113,7 +146,3 @@ x <- url_xbox_store %>%
 
 
 
-
-
-
- 
