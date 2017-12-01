@@ -53,3 +53,18 @@ p <-ggplot(data = per_long,aes(x = date, y = perc, color = customization)) +
     scale_color_manual(values = c("#ED7D31", '#FFC000', '#BFBFBF')) +
     guides(color = FALSE) # remove legend
 
+
+# bar chart
+rating_df_plot <- ggplot(data = rating_df_pos, aes(x = star, y = percentage)) + 
+    theme_minimal() +
+    geom_bar(stat = 'identity', fill =  c("#A80000"), width = 0.5) + 
+    geom_text(aes(x = star, y = pos,label = paste0(percentage, "%"))) + 
+    scale_x_continuous(labels = dollar_format(suffix = " stars", prefix = "")) +
+    theme(legend.position="none", 
+          axis.text.x = element_blank(),
+          axis.title=element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+          ) +
+    coord_flip()
