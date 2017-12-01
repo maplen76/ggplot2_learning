@@ -19,12 +19,12 @@ title <- paste0('[WOF][JEO] Marketing Report Week of ', dt_start, ' ~ ', dt_end)
 OutApp <- COMCreate("Outlook.Application")
 outMail = OutApp$CreateItem(0)
 
-# yu.wang3@ubisoft.com
 outMail[["To"]] = "xxx@xxxx.com"
 outMail[["CC"]] = "xxx@xxx.com"
 outMail[["subject"]] = title
 
 # attach all of png files
+# list all of files in the directory and filter out .png files, and attach all of them
 charts <- list.files() %>% str_subset(".png")
 charts <- paste0(getwd(),'/',charts) # have to attach the full path when attch file as attachment
 
