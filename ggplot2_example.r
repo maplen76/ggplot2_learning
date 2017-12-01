@@ -1,4 +1,4 @@
-# creae area_plot
+# area chart
 area_plot <- function (data = data, x = date, y = nb_users, title = title, scale_max = scale_max) {
     ggplot(data = data, aes(x = date, y = nb_users, fill = forcats::fct_rev(Platform))) +
         theme_minimal() +
@@ -17,3 +17,39 @@ area_plot <- function (data = data, x = date, y = nb_users, title = title, scale
         theme(axis.ticks.x = element_line(size = 1, colour = "#DEDEDE")) + # set axis ticks
         scale_x_date(date_minor_breaks = "3 days", breaks = pretty_breaks(7), expand = c(0, 0.5)) # expand remove space between axis and area-plot
 }
+
+
+# Pie chart
+wof_gameMode_plot <-
+ggplot(data = wof_gameMode_total, aes(x = "", y = nb_match, fill = contextName)) +
+    geom_bar(width = 1, stat = "identity") + 
+    geom_text(aes(x = c(1,1.1,1,1.2,1.4,1.6), y = midpoint, label = labels.prison), size = 3) +
+  # geom_label_repel(aes(x = 1, y = midpoint, label = labels.prison))  # require library ggrepel
+  # guides(fill = guide_legend(reverse=TRUE,title = NULL,)) + # reverse color fill
+    guides(fill = FALSE) +
+    coord_polar("y", start=0) +
+    scale_fill_brewer(palette = "Oranges") +
+    theme_minimal() +
+    theme_void()
+
+# line chart
+p <-ggplot(data = per_long,aes(x = date, y = perc, color = customization)) +
+    geom_line(size = 1) + 
+    theme_minimal() +
+  # ggtitle("\n\n") +
+    scale_y_continuous(limits = c(0,100),
+                       labels = dollar_format(suffix = "%", prefix = ""), 
+                       breaks = pretty_breaks(5)) +
+    theme(axis.title = element_blank(), # remove title
+        #  legend.title = element_blank(), # remove legend title
+        #  legend.position = c(0.17,1.15), # manually fix
+        #  legend.direction = "vertical", # set legend direction
+          panel.grid.major.x = element_blank(), #remove x major grid line
+          panel.grid.minor.x = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          axis.ticks.x = element_line(size = 1, colour = "#DEDEDE") # set x ticks
+          ) +
+    scale_x_date(breaks = pretty_breaks(10), expand = c(0, 0.5)) + 
+    scale_color_manual(values = c("#ED7D31", '#FFC000', '#BFBFBF')) +
+    guides(color = FALSE) # remove legend
+
