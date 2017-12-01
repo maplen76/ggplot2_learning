@@ -34,6 +34,7 @@ for (a in charts) {
 }
 
 # build HTML body
+# have to create a HTML.txt file to store HTML code, and replace corresponding values
 library(readtext)
 htmlbody <- readtext("wof_weekly_report_format.txt")
 MyHTML <- htmlbody$text
